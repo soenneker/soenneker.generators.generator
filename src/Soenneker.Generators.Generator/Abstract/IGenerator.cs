@@ -8,5 +8,10 @@ namespace Soenneker.Generators.Generator.Abstract;
 /// </summary>
 public interface IGenerator
 {
+    /// <summary>
+    /// Executes the generate operation.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     ValueTask Generate(CancellationToken cancellationToken = default);
 }
