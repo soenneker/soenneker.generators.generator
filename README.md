@@ -5,7 +5,7 @@
 
 # Soenneker.Generators.Generator
 
-An abstract Generator with a cancellable async Generate method.
+A minimal contract and abstract base class for asynchronous, cancellable generation jobs.
 
 ## Install
 
@@ -13,17 +13,36 @@ An abstract Generator with a cancellable async Generate method.
 dotnet add package Soenneker.Generators.Generator
 ```
 
-## Quick start
+## Implement a generator
+
+```csharp
+using Soenneker.Generators.Generator;
+
+public sealed class ClientGenerator : Generator
+{
+    public override async ValueTask Generate(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await WriteClientSources(cancellationToken);
+    }
+}
+```
+
+Depend on `IGenerator` when the caller does not need the concrete implementation:
 
 ```csharp
 using Soenneker.Generators.Generator.Abstract;
 
-IGenerator generator = /* resolve from DI */;
-await generator.Generate(default);
+public sealed class GenerationCommand(IGenerator generator)
+{
+    public ValueTask Run(CancellationToken cancellationToken) =>
+        generator.Generate(cancellationToken);
+}
 ```
 
-Generates generator for the generator.
+## Behavior
 
-## What you get
-
-- `IGenerator` — An abstract Generator with a cancellable async Generate method.
+- `IGenerator` defines one `Generate` operation. `Generator` is an optional base class with no additional behavior.
+- Cancellation is cooperative: implementations must observe or pass the token to their asynchronous work.
+- The contract does not define output locations, concurrency, idempotency, scheduling, logging, retries, or dependency-injection registration. Those choices belong to the implementation and its host.
+- Exceptions and cancellation propagate to the caller.
